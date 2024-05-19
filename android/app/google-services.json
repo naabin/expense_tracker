@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "917020972935",
+    "project_id": "myhome-dee6b",
+    "storage_bucket": "myhome-dee6b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917020972935:android:bd633042afb581bea76522",
+        "android_client_info": {
+          "package_name": "com.example.my_home"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBke8BQbSDKzuKUHrdzbuYQxDVgRLXtXxg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
