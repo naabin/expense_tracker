@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int currentPageIndex = 0;
-  List<Widget> pageList = [const Expenses(), const AddExpense()];
+  List<Widget> pageList = [Expenses(), const AddExpense()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,12 +34,9 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           switch (index) {
             case 0:
-              // context.go('/expenses');
-              // Navigator.pushNamed(context, '/expenses');
               break;
             case 1:
               context.go('/add-expense');
-              // Navigator.pushNamed(context, '/add-expense');
               break;
           }
         },

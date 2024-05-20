@@ -1,16 +1,63 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_home/widgets/loading.dart';
+import 'package:my_home/app_colors.dart';
+import 'package:my_home/screens/add_expense.dart';
+import 'package:my_home/widgets/food_expense.dart';
 
 class Expenses extends StatefulWidget {
-  const Expenses({super.key});
+  Expenses({super.key});
   @override
   State<Expenses> createState() => _ExpensesState();
+  List<Color> get availableColors => const <Color>[
+        AppColors.contentColorPurple,
+        AppColors.contentColorYellow,
+        AppColors.contentColorBlue,
+        AppColors.contentColorOrange,
+        AppColors.contentColorPink,
+        AppColors.contentColorRed,
+      ];
+
+  final Color barBackgroundColor = AppColors.contentColorWhite.withOpacity(0.3);
+  final Color barColor = AppColors.contentColorWhite;
+  final Color touchedBarColor = AppColors.contentColorGreen;
 }
 
 class _ExpensesState extends State<Expenses> {
+  final Duration animDuration = const Duration(microseconds: 250);
+  int touchedIndex = -1;
+  bool isPlaying = false;
+  List<String> recordedCategories = [];
+  List<double> recordedToal = [];
+  @override
+  void initState() {
+    super.initState();
+    getCategories();
+  }
+
+  void getExpenseTotal(double amt) {
+    setState(() => recordedToal = [...recordedToal, amt]);
+  }
+
+  Future<void> getCategories() async {
+    final currentUser = FirebaseAuth.instance.currentUser?.uid;
+    final expensesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser)
+        .collection('expenses')
+        .doc(currentUser);
+    for (final categotry in ExpenseCategory.values) {
+      final snap = await expensesRef.collection(categotry.name).get();
+      if (snap.docs.isNotEmpty) {
+        setState(
+            () => recordedCategories = [...recordedCategories, categotry.name]);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser?.uid;
@@ -19,7 +66,6 @@ class _ExpensesState extends State<Expenses> {
         .doc(currentUser)
         .collection('expenses')
         .doc(currentUser);
-    final foodExpenses = expensesRef.collection('food');
     return Scaffold(
       appBar: AppBar(
         leading: context.canPop()
@@ -31,114 +77,209 @@ class _ExpensesState extends State<Expenses> {
         title: const Center(
           child: Text('Expenses'),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).primaryColorDark,
       ),
-      body: StreamBuilder(
-        stream: foodExpenses.snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget();
-          }
-          if (snapshot.connectionState == ConnectionState.done &&
-              !snapshot.hasData) {
-            return const Center(
-              child: Text(
-                  'It looks like you do not have any expenses recorded. Get started now.'),
-            );
-          }
-          if (snapshot.connectionState == ConnectionState.none ||
-              snapshot.error != null) {
-            return const Center(
-              child: Text('Problem occured when loading data'),
-            );
-          }
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              final expense = snapshot.data!.docs[index];
-              return Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Flexible(
-                  fit: FlexFit.tight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          // height: 50,
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                              )),
-                          child: Center(
-                            child: getTotalFoodAmount(),
-                          ),
-                        ),
-
-                        // flex: 1,
-                        Container(
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
+      body: recordedCategories.isNotEmpty
+          ? SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  'Cost',
+                                  style: TextStyle(
+                                      color: AppColors.contentColorGreen,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(
+                                  height: 4,
+                                ),
+                                const Text(
+                                  'Gibberish',
+                                  style: TextStyle(
+                                      color: AppColors.contentColorGreen,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(
+                                  height: 30,
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    child: BarChart(
+                                      isPlaying ? mainBarData() : mainBarData(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                              ],
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              expense['expense_type'],
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
+                  Expanded(
+                    flex: 1,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 300,
+                              childAspectRatio: 1,
+                              mainAxisSpacing: 15,
+                              crossAxisSpacing: 10),
+                      itemCount: recordedCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = recordedCategories[index];
+                        return ExpenseWidget(
+                            docRef: expensesRef,
+                            category: category,
+                            totalValue: getExpenseTotal);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const Center(
+              child: Text(
+                'What have you spent on today',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            ),
     );
   }
 
-  Widget getTotalFoodAmount() {
-    final currentUser = FirebaseAuth.instance.currentUser?.uid;
-    final expensesRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser)
-        .collection('expenses')
-        .doc(currentUser)
-        .collection('food')
-        .where('expense_type', isEqualTo: 'food')
-        .aggregate(sum('amount'))
-        .get()
-        .then((_) => _.getSum('amount'));
-    return FutureBuilder(
-        future: expensesRef,
-        builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget();
-          }
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('Something Went wrong'),
+  List<BarChartGroupData> getGroupData(
+      {double width = 22, List<int> showToolTips = const []}) {
+    List<BarChartGroupData> l = [];
+    Color barColor = widget.barColor;
+    for (int i = 0; i < recordedToal.length; i++) {
+      bool isTouched = touchedIndex == i;
+      l.add(
+        BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: isTouched ? recordedToal[i] + 1 : recordedToal[i],
+                color: isTouched ? widget.touchedBarColor : barColor,
+                width: width,
+                borderSide: isTouched
+                    ? BorderSide(color: widget.touchedBarColor)
+                    : const BorderSide(color: Colors.white, width: 0),
+                backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: recordedToal[i],
+                    color: widget.barBackgroundColor),
+              )
+            ],
+            showingTooltipIndicators: showToolTips),
+      );
+    }
+    return l;
+  }
+
+  BarChartData mainBarData() {
+    return BarChartData(
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          getTooltipColor: (_) => Colors.blueGrey,
+          tooltipHorizontalAlignment: FLHorizontalAlignment.right,
+          tooltipMargin: -10,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            String xTitle = recordedCategories[groupIndex];
+            return BarTooltipItem(
+              '$xTitle\n',
+              const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
+              children: <TextSpan>[
+                TextSpan(
+                  text: (rod.toY - 1).toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             );
-          }
-          return Text(
-            snapshot.data.toString(),
-            style: const TextStyle(fontSize: 48, color: Colors.white),
-          );
-        });
+          },
+        ),
+        touchCallback: (FlTouchEvent event, bartouchResponse) {
+          setState(() {
+            if (!event.isInterestedForInteractions ||
+                bartouchResponse == null ||
+                bartouchResponse.spot == null) {
+              touchedIndex = -1;
+              return;
+            }
+            touchedIndex = bartouchResponse.spot!.touchedBarGroupIndex;
+          });
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: getTitles,
+            reservedSize: 38,
+          ),
+        ),
+        leftTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      barGroups: getGroupData(),
+    );
+  }
+
+  Widget getTitles(double value, TitleMeta meta) {
+    const style = TextStyle(
+        color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14);
+    Text text = Text(recordedCategories[value.toInt()][0], style: style);
+    return SideTitleWidget(
+      axisSide: meta.axisSide,
+      space: 16,
+      child: text,
+    );
+  }
+
+  Future<dynamic> refreshState() async {
+    setState(() {});
+    await Future<dynamic>.delayed(
+      animDuration + const Duration(microseconds: 50),
+    );
+    if (isPlaying) {
+      await refreshState();
+    }
   }
 }

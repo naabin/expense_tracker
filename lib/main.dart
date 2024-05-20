@@ -20,8 +20,8 @@ class MyApp extends StatelessWidget {
       routerConfig: goRouterConfig,
       theme: ThemeData().copyWith(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 6, 108, 240),
-          background: const Color.fromARGB(255, 69, 30, 124),
+          seedColor: const Color.fromARGB(255, 6, 10, 235),
+          background: const Color.fromARGB(255, 3, 90, 172),
         ),
       ),
     );

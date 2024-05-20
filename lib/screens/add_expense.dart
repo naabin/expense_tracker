@@ -3,14 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum ExpenseType {
+enum ExpenseCategory {
   food,
   health,
   transport,
-  mortage,
+  mortgage,
   phone,
   study,
-  miscellanous,
+  miscellaneous,
   creditcard,
   debt,
   travel,
@@ -18,7 +18,7 @@ enum ExpenseType {
   other,
 }
 
-enum ExpenseFrequency { weekly, fortnightly, mothly }
+enum ExpenseFrequency { daily, weekly, fortnightly, mothly, yearly }
 
 class AddExpense extends StatefulWidget {
   const AddExpense({super.key});
@@ -30,7 +30,7 @@ class _AddExpenseState extends State<AddExpense> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   var submitting = false;
-  ExpenseType? category;
+  ExpenseCategory? category;
   ExpenseFrequency? expenseFrequency;
   var recurring = false;
   bool isValid = false;
@@ -135,7 +135,7 @@ class _AddExpenseState extends State<AddExpense> {
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<ExpenseType>(
+                      child: DropdownButtonFormField<ExpenseCategory>(
                         onChanged: (value) {
                           category = value;
                         },
@@ -204,11 +204,11 @@ class _AddExpenseState extends State<AddExpense> {
     );
   }
 
-  List<DropdownMenuItem<ExpenseType>> getCategoryDropdowns() {
-    List<DropdownMenuItem<ExpenseType>> dropDowns =
-        <DropdownMenuItem<ExpenseType>>[];
-    for (final expense in ExpenseType.values) {
-      final wi = DropdownMenuItem<ExpenseType>(
+  List<DropdownMenuItem<ExpenseCategory>> getCategoryDropdowns() {
+    List<DropdownMenuItem<ExpenseCategory>> dropDowns =
+        <DropdownMenuItem<ExpenseCategory>>[];
+    for (final expense in ExpenseCategory.values) {
+      final wi = DropdownMenuItem<ExpenseCategory>(
           value: expense, child: Text(expense.name.toUpperCase()));
       dropDowns.add(wi);
     }

@@ -23,6 +23,6 @@ final GoRouter goRouterConfig = GoRouter(
           );
         }),
     GoRoute(path: '/add-expense', builder: (context, _) => const AddExpense()),
-    GoRoute(path: '/expenses', builder: (context, _) => const Expenses()),
+    GoRoute(path: '/expenses', builder: (context, _) => Expenses()),
   ],
 );
