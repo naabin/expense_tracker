@@ -57,7 +57,6 @@ class _ExpensesState extends State<Expenses> {
   }
 
   Future<void> getTotalForCategories() async {
-    print(widget.recordedCategories);
     if (widget.recordedCategories.isEmpty) return;
     final currentUser = FirebaseAuth.instance.currentUser?.uid;
     final expensesRef = FirebaseFirestore.instance

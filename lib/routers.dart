@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_home/screens/add_expense.dart';
+import 'package:my_home/screens/categorized_expenses.dart';
 import 'package:my_home/screens/expenses.dart';
 import 'package:my_home/screens/home.dart';
 import 'package:my_home/widgets/loading.dart';
@@ -29,5 +30,9 @@ final GoRouter goRouterConfig = GoRouter(
         recordedCategories: _.extra as List<String>,
       ),
     ),
+    GoRoute(
+        path: '/expenses/:category',
+        builder: (context, state) =>
+            CategorizedExpenes(category: state.pathParameters['category']!))
   ],
 );

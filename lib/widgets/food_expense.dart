@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ExpenseWidget extends StatefulWidget {
   const ExpenseWidget({
@@ -30,17 +31,22 @@ class _FoodExpenseWidget extends State<ExpenseWidget> {
         ),
         child: Column(
           children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height / 4 - 50,
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: Text(
-                    "\$${(widget.totalCost).toString()}",
-                    style: const TextStyle(
-                        fontSize: 48,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
+            InkWell(
+              onTap: () {
+                context.go('/expenses/${widget.category}');
+              },
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height / 4 - 50,
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: Text(
+                      "\$${(widget.totalCost).toString()}",
+                      style: const TextStyle(
+                          fontSize: 48,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ),
